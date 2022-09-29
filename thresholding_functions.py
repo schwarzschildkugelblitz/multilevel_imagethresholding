@@ -1,8 +1,7 @@
 import numpy
 import math
 
-def kapur(search_agent, image):
-    histogram, _ = numpy.histogram(image, bins=range(256), density=True)
+def kapur(search_agent,histogram):
     cumulativehistogram = histogram.cumsum()
 
     final_entropy = 0
@@ -28,7 +27,7 @@ def kapur(search_agent, image):
 def getFunctionDetails(a):
     # [name, lb, ub, dim]
     param = {
-        "kapur": ["kapur", -100, 100, 30],
-        "otsu": ["otsu", -10, 10, 30],
+        "kapur": ["kapur", 0, 255,2],
+        "otsu": ["otsu", 0, 25,2],
     }
     return param.get(a, "nothing")
