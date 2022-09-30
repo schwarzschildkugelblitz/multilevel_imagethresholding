@@ -163,6 +163,18 @@ def run(optimizer, objectivefunc, NumOfRuns, params, export_flags):
     for l in range(0, Iterations):
         CnvgHeader.append("Iter" + str(l + 1))
 
+    for l in range(0, Iterations):
+        CnvgHeader.append("Iterpsnr" + str(l + 1))
+
+    for l in range(0, Iterations):
+        CnvgHeader.append("Iterssim" + str(l + 1))
+
+    for l in range(0, Iterations):
+        CnvgHeader.append("Iterfsim" + str(l + 1))
+
+    for l in range(0, Iterations):
+        CnvgHeader.append("Iterncc" + str(l + 1))
+
     for i in range(0, len(optimizer)):
         for j in range(0, len(objectivefunc)):
             convergence = [0] * NumOfRuns
@@ -173,6 +185,10 @@ def run(optimizer, objectivefunc, NumOfRuns, params, export_flags):
                     func_details = benchmarks.getFunctionDetails(objectivefunc[j])
                     x = selector(optimizer[i], func_details, PopulationSize, Iterations ,dim)
                     convergence[k] = x.convergence
+                    psnr[k] = x.psnr
+                    ssim[k] = x.ssim
+                    fsim[k] = x.fsim
+                    ncc[k] = x.ncc
                     optimizerName = x.optimizer
                     objfname = x.objfname
                     if Export_details == True:
@@ -183,47 +199,50 @@ def run(optimizer, objectivefunc, NumOfRuns, params, export_flags):
                                 Flag_details == False
                             ):  # just one time to write the header of the CSV file
                                 header = numpy.concatenate(
-                                    [["Optimizer", "objfname", "ExecutionTime"], CnvgHeader]
+                                    [["Optimizer", "dim","objfname", "ExecutionTime"], CnvgHeader]
                                 )
                                 writer.writerow(header)
                                 Flag_details = True  # at least one experiment
                             executionTime[k] = x.executionTime
                             a = numpy.concatenate(
-                                [[x.optimizer, x.objfname, x.executionTime], x.convergence]
+                                [[x.optimizer,dim, x.objfname, x.executionTime], x.convergence, x.psnr, x.ssim, x.fsim, x.ncc]
                             )
                             writer.writerow(a)
                         out.close()
 
-            if Export == True:
-                ExportToFile = results_directory + "experiment.csv"
+                if Export == True:
+                    ExportToFile = results_directory + "experiment.csv"
 
-                with open(ExportToFile, "a", newline="\n") as out:
-                    writer = csv.writer(out, delimiter=",")
-                    if (
-                        Flag == False
-                    ):  # just one time to write the header of the CSV file
-                        header = numpy.concatenate(
-                            [["Optimizer", "objfname", "ExecutionTime"], CnvgHeader]
+                    with open(ExportToFile, "a", newline="\n") as out:
+                        writer = csv.writer(out, delimiter=",")
+                        if (
+                            Flag == False
+                        ):  # just one time to write the header of the CSV file
+                            header = numpy.concatenate(
+                                [["Optimizer", "dim", "objfname", "ExecutionTime"], CnvgHeader]
+                            )
+                            writer.writerow(header)
+                            Flag = True
+
+                        avgExecutionTime = float("%0.2f" % (sum(executionTime) / NumOfRuns))
+                        avgConvergence = numpy.around(
+                            numpy.mean(convergence, axis=0, dtype=numpy.float64), decimals=2
+                        ).tolist()
+                        avgpsnr = numpy.around(
+                            numpy.mean(convergence, axis=0, dtype=numpy.float64), decimals=2
+                        ).tolist()
+                        a = numpy.concatenate(
+                            [[optimizerName,dim, objfname, avgExecutionTime], avgConvergence]
                         )
-                        writer.writerow(header)
-                        Flag = True
-
-                    avgExecutionTime = float("%0.2f" % (sum(executionTime) / NumOfRuns))
-                    avgConvergence = numpy.around(
-                        numpy.mean(convergence, axis=0, dtype=numpy.float64), decimals=2
-                    ).tolist()
-                    a = numpy.concatenate(
-                        [[optimizerName, objfname, avgExecutionTime], avgConvergence]
-                    )
-                    writer.writerow(a)
-                out.close()
+                        writer.writerow(a)
+                    out.close()
 
     if Export_convergence == True:
         print(optimizer)
-        conv_plot.run(results_directory, optimizer, objectivefunc, Iterations)
+        conv_plot.run(results_directory, optimizer, objectivefunc, Iterations,dim)
 
     if Export_boxplot == True:
-        box_plot.run(results_directory, optimizer, objectivefunc, Iterations)
+        box_plot.run(results_directory, optimizer, objectivefunc, Iterations,dim)
 
     if Flag == False:  # Faild to run at least one experiment
         print(
