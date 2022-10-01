@@ -1,11 +1,3 @@
-###############################################################################
-# Python code of AHA.                                                         #
-# The python code is based on the following papers:                           #
-# W. Zhao, L. Wang and S. Mirjalili, Artificial hummingbird algorithm: A      #
-# new bio-inspired optimizer with its engineering applications, Computer      #
-# Methods in Applied Mechanics and Engineering (2021) 114194, https:          #
-# //doi.org/10.1016/j.cma.2021.114194.                                        #
-###############################################################################
 import numpy as np
 from torch import randperm
 from matplotlib.pyplot import *
