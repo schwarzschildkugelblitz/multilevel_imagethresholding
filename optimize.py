@@ -178,6 +178,10 @@ def run(optimizer, objectivefunc, NumOfRuns, params, export_flags):
     for i in range(0, len(optimizer)):
         for j in range(0, len(objectivefunc)):
             convergence = [0] * NumOfRuns
+            psnr = [0] * NumOfRuns
+            ssim = [0] * NumOfRuns
+            fsim = [0] * NumOfRuns
+            ncc = [0] * NumOfRuns
             executionTime = [0] * NumOfRuns
             threshold= [2,3,5,7,8,10,12,13,15,17,18,20]
             for dim in threshold:
@@ -229,10 +233,19 @@ def run(optimizer, objectivefunc, NumOfRuns, params, export_flags):
                             numpy.mean(convergence, axis=0, dtype=numpy.float64), decimals=2
                         ).tolist()
                         avgpsnr = numpy.around(
+                            numpy.mean(psnr, axis=0, dtype=numpy.float64), decimals=2
+                        ).tolist()
+                        avgssim = numpy.around(
+                            numpy.mean(ssim, axis=0, dtype=numpy.float64), decimals=2
+                        ).tolist()
+                        avgfsim = numpy.around(
+                            numpy.mean(convergence, axis=0, dtype=numpy.float64), decimals=2
+                        ).tolist()
+                        avgncc = numpy.around(
                             numpy.mean(convergence, axis=0, dtype=numpy.float64), decimals=2
                         ).tolist()
                         a = numpy.concatenate(
-                            [[optimizerName,dim, objfname, avgExecutionTime], avgConvergence]
+                            [[optimizerName,dim, objfname, avgExecutionTime], avgConvergence,avgpsnr, avgssim, avgpsn]
                         )
                         writer.writerow(a)
                     out.close()
