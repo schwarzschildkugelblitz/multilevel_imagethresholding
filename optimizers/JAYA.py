@@ -5,13 +5,14 @@ import numpy
 import math
 from solution import solution
 import time
+import image_metric
+from skimage import data, io, img_as_ubyte
 
-
-def JAYA(objf, lb, ub, dim, SearchAgents_no, Max_iter):
+def JAYA(objf, lb, ub, dim, SearchAgents_no, Max_iter,image):
 
     # Best and Worst position initialization
     Best_pos = numpy.zeros(dim)
-    Best_score = float("inf")
+    Best_score = float("-inf")
 
     Worst_pos = numpy.zeros(dim)
     Worst_score = float(0)
@@ -40,15 +41,20 @@ def JAYA(objf, lb, ub, dim, SearchAgents_no, Max_iter):
         fitness = objf(Positions[i])
         fitness_matrix[i] = fitness
 
-        if fitness < Best_score:
+        if fitness > Best_score:
             Best_score = fitness  # Update Best_Score
             Best_pos = Positions[i]
 
-        if fitness > Worst_score:
+        if fitness < Worst_score:
             Worst_score = fitness  # Update Worst_Score
             Worst_pos = Positions[i]
 
     Convergence_curve = numpy.zeros(Max_iter)
+    psnr = numpy.zeros(Max_iter)
+    ssim = numpy.zeros(Max_iter)
+    fsim = numpy.zeros(Max_iter)
+    ncc = numpy.zeros(Max_iter)
+    mse = numpy.zeros(Max_iter)
     s = solution()
 
     # Loop counter
@@ -86,21 +92,32 @@ def JAYA(objf, lb, ub, dim, SearchAgents_no, Max_iter):
             current_fit = fitness_matrix[i]
 
             # replacing current element with new element if it has better fitness
-            if new_fitness < current_fit:
+            if new_fitness > current_fit:
                 Positions[i] = New_Position
                 fitness_matrix[i] = new_fitness
 
         # finding the best and worst element
         for i in range(SearchAgents_no):
-            if fitness_matrix[i] < Best_score:
+            if fitness_matrix[i] > Best_score:
                 Best_score = fitness_matrix[i]
                 Best_pos = Positions[i, :].copy()
 
-            if fitness_matrix[i] > Worst_score:
+            if fitness_matrix[i] < Worst_score:
                 Worst_score = fitness_matrix[i]
                 Worst_pos = Positions[i, :].copy()
 
         Convergence_curve[l] = Best_score
+        e_thresholds = [0]
+        e_thresholds.extend(Best_pos)
+        e_thresholds.extend([len(histogram) - 1])
+        e_thresholds.sort()
+        regions = numpy.digitize(image, bins=e_thresholds)
+        output = img_as_ubyte(regions)
+        psnr[l]=image_metric.PSNR(image,output)
+        ssim[l]=image_metric.SSIM(image,output)
+        fsim[l]=image_metric.FSIM(image,output)
+        ncc[l]=image_metric.NCC(image,output)
+        mse[l]=image_metric.MSE(image,output)
 
         if l % 1 == 0:
             print(
@@ -111,6 +128,13 @@ def JAYA(objf, lb, ub, dim, SearchAgents_no, Max_iter):
     s.endTime = time.strftime("%Y-%m-%d-%H-%M-%S")
     s.executionTime = timerEnd - timerStart
     s.convergence = Convergence_curve
+    s.psnr=psnr
+    s.ssim=ssim
+    s.fsim=fsim
+    s.ncc=ncc
+    s.mse=mse
+    s.bestIndividual =Best_pos
+    s.thresholds = e_thresholds
     s.optimizer = "JAYA"
     s.objfname = objf.__name__
 
