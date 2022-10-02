@@ -3,9 +3,13 @@ import numpy
 import math
 from solution import solution
 import time
+import image_metric
+from skimage import data, io, img_as_ubyte
 
 
-def GWO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
+def GWO(objf, lb, ub, dim, SearchAgents_no, Max_iter,image):
+
+    histogram = numpy.histogram(image, bins=range(256))[0].astype(numpy.float)
 
     # Max_iter=1000
     # lb=-100
@@ -15,13 +19,13 @@ def GWO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
 
     # initialize alpha, beta, and delta_pos
     Alpha_pos = numpy.zeros(dim)
-    Alpha_score = float("inf")
+    Alpha_score = float("-inf")
 
     Beta_pos = numpy.zeros(dim)
-    Beta_score = float("inf")
+    Beta_score = float("-inf")
 
     Delta_pos = numpy.zeros(dim)
-    Delta_score = float("inf")
+    Delta_score = float("-inf")
 
     if not isinstance(lb, list):
         lb = [lb] * dim
@@ -36,6 +40,11 @@ def GWO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
         )
 
     Convergence_curve = numpy.zeros(Max_iter)
+    psnr = numpy.zeros(Max_iter)
+    ssim = numpy.zeros(Max_iter)
+    fsim = numpy.zeros(Max_iter)
+    ncc = numpy.zeros(Max_iter)
+    mse = numpy.zeros(Max_iter)
     s = solution()
 
     # Loop counter
@@ -52,10 +61,10 @@ def GWO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
                 Positions[i, j] = numpy.clip(Positions[i, j], lb[j], ub[j])
 
             # Calculate objective function for each search agent
-            fitness = objf(Positions[i, :])
+            fitness = objf(Positions[i, :], histogram)
 
             # Update Alpha, Beta, and Delta
-            if fitness < Alpha_score:
+            if fitness > Alpha_score:
                 Delta_score = Beta_score  # Update delte
                 Delta_pos = Beta_pos.copy()
                 Beta_score = Alpha_score  # Update beta
@@ -64,13 +73,13 @@ def GWO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
                 # Update alpha
                 Alpha_pos = Positions[i, :].copy()
 
-            if fitness > Alpha_score and fitness < Beta_score:
+            if fitness < Alpha_score and fitness > Beta_score:
                 Delta_score = Beta_score  # Update delte
                 Delta_pos = Beta_pos.copy()
                 Beta_score = fitness  # Update beta
                 Beta_pos = Positions[i, :].copy()
 
-            if fitness > Alpha_score and fitness > Beta_score and fitness < Delta_score:
+            if fitness < Alpha_score and fitness < Beta_score and fitness > Delta_score:
                 Delta_score = fitness  # Update delta
                 Delta_pos = Positions[i, :].copy()
 
@@ -122,8 +131,18 @@ def GWO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
 
                 Positions[i, j] = (X1 + X2 + X3) / 3  # Equation (3.7)
 
+        e_thresholds = [0]
+        e_thresholds.extend(Alpha_pos)
+        e_thresholds.extend([len(histogram) - 1])
+        e_thresholds.sort()
+        regions = numpy.digitize(image, bins=e_thresholds)
+        output = img_as_ubyte(regions)
         Convergence_curve[l] = Alpha_score
-
+        psnr[l]=image_metric.PSNR(image,output)
+        ssim[l]=image_metric.SSIM(image,output)
+        fsim[l]=image_metric.FSIM(image,output)
+        ncc[l]=image_metric.NCC(image,output)
+        mse[l]=image_metric.NCC(image,output)
         if l % 1 == 0:
             print(
                 ["At iteration " + str(l) + " the best fitness is " + str(Alpha_score)]
@@ -133,7 +152,14 @@ def GWO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
     s.endTime = time.strftime("%Y-%m-%d-%H-%M-%S")
     s.executionTime = timerEnd - timerStart
     s.convergence = Convergence_curve
+    s.psnr=psnr
+    s.ssim=ssim
+    s.fsim=fsim
+    s.ncc=ncc
+    s.mse=mse
     s.optimizer = "GWO"
     s.objfname = objf.__name__
+    s.bestIndividual = numpy.sort(Alpha_pos)
 
     return s
+
