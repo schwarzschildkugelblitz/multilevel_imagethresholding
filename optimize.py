@@ -171,12 +171,13 @@ def run(optimizer, objectivefunc, NumOfRuns, params, export_flags ,images):
     CnvgHeader.append("Iterssim" + str(l + 1))
     CnvgHeader.append("Iterfsim" + str(l + 1))
     CnvgHeader.append("Iterncc" + str(l + 1))
+    CnvgHeader.append("Itermse" + str(l + 1))
 
     for i in range(0, len(optimizer)):
         for j in range(0, len(objectivefunc)):
             convergence = [0] * NumOfRuns
             executionTime = [0] * NumOfRuns
-            threshold= [15]
+            threshold= [2,3,5,7,8,10,12,13,15,17,18,20,22,23,25]
             for images in images :
                 image =cv2.imread("images\{}.jpg".format(images),0)
                 histogram = numpy.histogram(image, bins=range(256))[0].astype(numpy.float)
@@ -251,17 +252,17 @@ def run(optimizer, objectivefunc, NumOfRuns, params, export_flags ,images):
                             # cv2.waitKey(0) 
                             cv2.imwrite(results_directory+x.optimizer+str(dim)+x.objfname+images+".jpg",output)
                             # cv2.imsave(results_directory+x.optimizer+str(dim)+x.objfname+images+".jpg",output)
-                            plt.ioff()
-                            fig, ax = plt.subplots()
-                            plt.plot(histogram)
-                            plt.title("Grayscale Histogram")
-                            plt.xlabel("grayscale value")
-                            plt.ylabel("pixels")
-                            fig_name = results_directory+x.optimizer,dim, x.objfname+images+"histgram"
-                            for f in range(len(thresholds)):
-                                plt.axvline(thresholds[f], color='r', linewidth=2)
-                            plt.savefig(fig_name)
-                            plt.clf()
+                            # plt.ioff()
+                            # fig, ax = plt.subplots()
+                            # plt.plot(histogram)
+                            # plt.title("Grayscale Histogram")
+                            # plt.xlabel("grayscale value")
+                            # plt.ylabel("pixels")
+                            # fig_name = results_directory+x.optimizer,dim, x.objfname+images+"histgram"
+                            # for f in range(len(thresholds)):
+                            #     plt.axvline(thresholds[f], color='r', linewidth=2)
+                            # plt.savefig(fig_name)
+                            # plt.clf()
 
                     if Export == True:
                         ExportToFile = results_directory + "experiment.csv"
