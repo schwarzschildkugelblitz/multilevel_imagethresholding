@@ -5,7 +5,7 @@ def kapur(search_agents,histogram):
 
     search_agent = [0]
     search_agent= numpy.concatenate((search_agent, search_agents), axis=None)
-    search_agents = [254]
+    search_agents = [255]
     search_agent= numpy.concatenate((search_agent, search_agents), axis=None)
     numpy.sort(search_agent)
     cumulativehistogram = histogram.cumsum()
@@ -31,46 +31,19 @@ def kapur(search_agents,histogram):
     return final_entropy
 
 def otsu(search_agent,histogram):
-    if image is None and hist is None:
-        raise ValueError('You must pass as a parameter either'
-                         'the input image or its histogram')
-
-    # Calculating histogram
-    if not hist:
-        hist = np.histogram(image, bins=range(256))[0].astype(np.float)
 
     # Cumulative histograms
-    c_hist = np.cumsum(hist)
-    cdf = np.cumsum(np.arange(len(hist)) * hist)
-    thr_combinations = combinations(range(255), nthrs)
+    c_hist = numpy.cumsum(histogram)
+    cdf = numpy.cumsum(numpy.arange(len(histogram)) * histogram)
 
-    max_var = 0
-    opt_thresholds = None
 
-    # Extending histograms for convenience
-    c_hist = np.append(c_hist, [0])
-    cdf = np.append(cdf, [0])
-
-    for thresholds in thr_combinations:
-        # Extending thresholds for convenience
-        e_thresholds = [-1]
-        e_thresholds.extend(thresholds)
-        e_thresholds.extend([len(hist) - 1])
-
-        # Computing variance for the current combination of thresholds
-        regions_var = _get_variance(hist, c_hist, cdf, e_thresholds)
-
-        if regions_var > max_var:
-            max_var = regions_var
-            opt_thresholds = thresholds
-
-    return opt_thresholds
-    variance = 0
-
-    for i in range(len(thresholds) - 1):
-        # Thresholds
-        t1 = thresholds[i] + 1
-        t2 = thresholds[i + 1]
+    e_thresholds = [0]
+    e_thresholds.extend(search_agent)
+    e_thresholds.extend([len(hist) - 1])
+    variance =0 
+    for i in range(len(e_thresholds) - 1):
+        t1 = e_thresholds[i] + 1
+        t2 = e_thresholds[i + 1]
 
         # Cumulative histogram
         weight = c_hist[t2] - c_hist[t1 - 1]
