@@ -9,6 +9,7 @@ import image_metric
 from skimage import data, io, img_as_ubyte
 
 def JAYA(objf, lb, ub, dim, SearchAgents_no, Max_iter,image):
+    histogram = numpy.histogram(image, bins=range(256))[0].astype(numpy.float)
 
     # Best and Worst position initialization
     Best_pos = numpy.zeros(dim)
@@ -38,7 +39,7 @@ def JAYA(objf, lb, ub, dim, SearchAgents_no, Max_iter,image):
             Positions[i, j] = numpy.clip(Positions[i, j], lb[j], ub[j])
 
         # Calculate objective function for each search agent
-        fitness = objf(Positions[i])
+        fitness = objf(Positions[i], histogram)
         fitness_matrix[i] = fitness
 
         if fitness > Best_score:
@@ -88,7 +89,7 @@ def JAYA(objf, lb, ub, dim, SearchAgents_no, Max_iter,image):
                 if New_Position[j] < lb[j]:
                     New_Position[j] = lb[j]
 
-            new_fitness = objf(New_Position)
+            new_fitness = objf(New_Position, histogram)
             current_fit = fitness_matrix[i]
 
             # replacing current element with new element if it has better fitness
@@ -116,7 +117,7 @@ def JAYA(objf, lb, ub, dim, SearchAgents_no, Max_iter,image):
         psnr[l]=image_metric.PSNR(image,output)
         ssim[l]=image_metric.SSIM(image,output)
         fsim[l]=image_metric.FSIM(image,output)
-        ncc[l]=image_metric.NCC(image,output)
+        # ncc[l]=image_metric.NCC(image,output)
         mse[l]=image_metric.MSE(image,output)
 
         if l % 1 == 0:

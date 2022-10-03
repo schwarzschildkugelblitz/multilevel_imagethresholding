@@ -131,18 +131,23 @@ def GWO(objf, lb, ub, dim, SearchAgents_no, Max_iter,image):
 
                 Positions[i, j] = (X1 + X2 + X3) / 3  # Equation (3.7)
 
+        Convergence_curve[l] = Alpha_score
         e_thresholds = [0]
         e_thresholds.extend(Alpha_pos)
         e_thresholds.extend([len(histogram) - 1])
         e_thresholds.sort()
-        regions = numpy.digitize(image, bins=e_thresholds)
+        region = numpy.digitize(image, bins=e_thresholds)
+        regions = region.copy()
+        for thi in range(len(e_thresholds)-1):
+            th1 = int( e_thresholds[thi] + 1)
+            th2 = int( e_thresholds[thi + 1])
+            regions[region== thi] = int((th1+th2)/2)
         output = img_as_ubyte(regions)
-        Convergence_curve[l] = Alpha_score
+
         psnr[l]=image_metric.PSNR(image,output)
         ssim[l]=image_metric.SSIM(image,output)
         fsim[l]=image_metric.FSIM(image,output)
-        ncc[l]=image_metric.NCC(image,output)
-        mse[l]=image_metric.NCC(image,output)
+        mse[l]=image_metric.MSE(image,output)
         if l % 1 == 0:
             print(
                 ["At iteration " + str(l) + " the best fitness is " + str(Alpha_score)]
@@ -160,6 +165,7 @@ def GWO(objf, lb, ub, dim, SearchAgents_no, Max_iter,image):
     s.optimizer = "GWO"
     s.objfname = objf.__name__
     s.bestIndividual = numpy.sort(Alpha_pos)
+    s.thresholds = e_thresholds
 
     return s
 

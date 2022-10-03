@@ -3,11 +3,14 @@ import random
 import numpy
 from solution import solution
 import time
+import image_metric
+from skimage import data, io, img_as_ubyte
 
 
-def PSO(objf, lb, ub, dim, PopSize, iters):
+def PSO(objf, lb, ub, dim, PopSize, iters,image):
 
     # PSO parameters
+    histogram = numpy.histogram(image, bins=range(256))[0].astype(numpy.float)
 
     Vmax = 6
     wMax = 0.9
@@ -26,18 +29,23 @@ def PSO(objf, lb, ub, dim, PopSize, iters):
     vel = numpy.zeros((PopSize, dim))
 
     pBestScore = numpy.zeros(PopSize)
-    pBestScore.fill(float("inf"))
+    pBestScore.fill(float("-inf"))
 
     pBest = numpy.zeros((PopSize, dim))
     gBest = numpy.zeros(dim)
 
-    gBestScore = float("inf")
+    gBestScore = float("-inf")
 
     pos = numpy.zeros((PopSize, dim))
     for i in range(dim):
         pos[:, i] = numpy.random.uniform(0, 1, PopSize) * (ub[i] - lb[i]) + lb[i]
 
     convergence_curve = numpy.zeros(iters)
+    psnr = numpy.zeros(iters)
+    ssim = numpy.zeros(iters)
+    fsim = numpy.zeros(iters)
+    ncc = numpy.zeros(iters)
+    mse = numpy.zeros(iters)
 
     ############################################
     print('PSO is optimizing  "' + objf.__name__ + '"')
@@ -51,13 +59,13 @@ def PSO(objf, lb, ub, dim, PopSize, iters):
             for j in range(dim):
                 pos[i, j] = numpy.clip(pos[i, j], lb[j], ub[j])
             # Calculate objective function for each particle
-            fitness = objf(pos[i, :])
+            fitness = objf(pos[i, :], histogram)
 
-            if pBestScore[i] > fitness:
+            if pBestScore[i] < fitness:
                 pBestScore[i] = fitness
                 pBest[i, :] = pos[i, :].copy()
 
-            if gBestScore > fitness:
+            if gBestScore < fitness:
                 gBestScore = fitness
                 gBest = pos[i, :].copy()
 
@@ -83,6 +91,17 @@ def PSO(objf, lb, ub, dim, PopSize, iters):
                 pos[i, j] = pos[i, j] + vel[i, j]
 
         convergence_curve[l] = gBestScore
+        e_thresholds = [0]
+        e_thresholds.extend(gBest)
+        e_thresholds.extend([len(histogram) - 1])
+        e_thresholds.sort()
+        regions = numpy.digitize(image, bins=e_thresholds)
+        output = img_as_ubyte(regions)
+        psnr[l]=image_metric.PSNR(image,output)
+        ssim[l]=image_metric.SSIM(image,output)
+        fsim[l]=image_metric.FSIM(image,output)
+        # ncc[l]=image_metric.NCC(image,output)
+        mse[l]=image_metric.MSE(image,output)
 
         if l % 1 == 0:
             print(
@@ -97,6 +116,13 @@ def PSO(objf, lb, ub, dim, PopSize, iters):
     s.endTime = time.strftime("%Y-%m-%d-%H-%M-%S")
     s.executionTime = timerEnd - timerStart
     s.convergence = convergence_curve
+    s.bestIndividual = gBest
+    s.psnr=psnr
+    s.ssim=ssim
+    s.fsim=fsim
+    s.ncc=ncc
+    s.mse=mse
+    s.thresholds = e_thresholds
     s.optimizer = "PSO"
     s.objfname = objf.__name__
 

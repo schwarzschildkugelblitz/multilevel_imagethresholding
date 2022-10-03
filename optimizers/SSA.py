@@ -3,29 +3,37 @@ import numpy
 import math
 from solution import solution
 import time
+import image_metric
+from skimage import data, io, img_as_ubyte
 
 
-def SSA(objf, lb, ub, dim, N, Max_iteration):
+def SSA(objf, lb, ub, dim, N, Max_iteration,image):
 
+    histogram = numpy.histogram(image, bins=range(256))[0].astype(numpy.float)
     # Max_iteration=1000
     # lb=-100
     # ub=100
     # dim=30
-    N = 50  # Number of search agents
+
     if not isinstance(lb, list):
         lb = [lb] * dim
     if not isinstance(ub, list):
         ub = [ub] * dim
     Convergence_curve = numpy.zeros(Max_iteration)
+    psnr = numpy.zeros(Max_iteration)
+    ssim = numpy.zeros(Max_iteration)
+    fsim = numpy.zeros(Max_iteration)
+    ncc = numpy.zeros(Max_iteration)
+    mse = numpy.zeros(Max_iteration)
 
     # Initialize the positions of salps
     SalpPositions = numpy.zeros((N, dim))
     for i in range(dim):
         SalpPositions[:, i] = numpy.random.uniform(0, 1, N) * (ub[i] - lb[i]) + lb[i]
-    SalpFitness = numpy.full(N, float("inf"))
+    SalpFitness = numpy.full(N, float("-inf"))
 
     FoodPosition = numpy.zeros(dim)
-    FoodFitness = float("inf")
+    FoodFitness = float("-inf")
     # Moth_fitness=numpy.fell(float("inf"))
 
     s = solution()
@@ -37,7 +45,7 @@ def SSA(objf, lb, ub, dim, N, Max_iteration):
 
     for i in range(0, N):
         # evaluate moths
-        SalpFitness[i] = objf(SalpPositions[i, :])
+        SalpFitness[i] = objf(SalpPositions[i, :], histogram)
 
     sorted_salps_fitness = numpy.sort(SalpFitness)
     I = numpy.argsort(SalpFitness)
@@ -93,9 +101,9 @@ def SSA(objf, lb, ub, dim, N, Max_iteration):
             for j in range(dim):
                 SalpPositions[i, j] = numpy.clip(SalpPositions[i, j], lb[j], ub[j])
 
-            SalpFitness[i] = objf(SalpPositions[i, :])
+            SalpFitness[i] = objf(SalpPositions[i, :], histogram)
 
-            if SalpFitness[i] < FoodFitness:
+            if SalpFitness[i] > FoodFitness:
                 FoodPosition = numpy.copy(SalpPositions[i, :])
                 FoodFitness = SalpFitness[i]
 
@@ -111,6 +119,19 @@ def SSA(objf, lb, ub, dim, N, Max_iteration):
             )
 
         Convergence_curve[Iteration] = FoodFitness
+        l =Iteration
+        e_thresholds = [0]
+        e_thresholds.extend(FoodPosition)
+        e_thresholds.extend([len(histogram) - 1])
+        e_thresholds.sort()
+        regions = numpy.digitize(image, bins=e_thresholds)
+        
+        output = img_as_ubyte(regions)
+        psnr[l]=image_metric.PSNR(image,output)
+        ssim[l]=image_metric.SSIM(image,output)
+        fsim[l]=image_metric.FSIM(image,output)
+        # ncc[l]=image_metric.NCC(image,output)
+        mse[l]=image_metric.MSE(image,output)
 
         Iteration = Iteration + 1
 
@@ -120,5 +141,12 @@ def SSA(objf, lb, ub, dim, N, Max_iteration):
     s.convergence = Convergence_curve
     s.optimizer = "SSA"
     s.objfname = objf.__name__
+    s.bestIndividual = FoodPosition
+    s.psnr=psnr
+    s.ssim=ssim
+    s.fsim=fsim
+    s.ncc=ncc
+    s.mse=mse
+    s.thresholds = e_thresholds
 
     return s

@@ -5,13 +5,17 @@ import numpy
 import math
 from solution import solution
 import time
+import image_metric
+from skimage import data, io, img_as_ubyte
 
 
-def SCA(objf, lb, ub, dim, SearchAgents_no, Max_iter):
+def SCA(objf, lb, ub, dim, SearchAgents_no, Max_iter, image ):
+
+    histogram = numpy.histogram(image, bins=range(256))[0].astype(numpy.float)
 
     # destination_pos
     Dest_pos = numpy.zeros(dim)
-    Dest_score = float("inf")
+    Dest_score = float("-inf")
 
     if not isinstance(lb, list):
         lb = [lb] * dim
@@ -26,6 +30,12 @@ def SCA(objf, lb, ub, dim, SearchAgents_no, Max_iter):
         )
 
     Convergence_curve = numpy.zeros(Max_iter)
+    psnr = numpy.zeros(Max_iter)
+    ssim = numpy.zeros(Max_iter)
+    fsim = numpy.zeros(Max_iter)
+    ncc = numpy.zeros(Max_iter)
+    mse = numpy.zeros(Max_iter)
+
     s = solution()
 
     # Loop counter
@@ -43,9 +53,9 @@ def SCA(objf, lb, ub, dim, SearchAgents_no, Max_iter):
                 Positions[i, j] = numpy.clip(Positions[i, j], lb[j], ub[j])
 
             # Calculate objective function for each search agent
-            fitness = objf(Positions[i, :])
+            fitness = objf(Positions[i, :], histogram)
 
-            if fitness < Dest_score:
+            if fitness > Dest_score:
                 Dest_score = fitness  # Update Dest_Score
                 Dest_pos = Positions[i, :].copy()
 
@@ -76,6 +86,17 @@ def SCA(objf, lb, ub, dim, SearchAgents_no, Max_iter):
                     )
 
         Convergence_curve[l] = Dest_score
+        e_thresholds = [0]
+        e_thresholds.extend(Dest_pos)
+        e_thresholds.extend([len(histogram) - 1])
+        e_thresholds.sort()
+        regions = numpy.digitize(image, bins=e_thresholds)
+        output = img_as_ubyte(regions)
+        psnr[l]=image_metric.PSNR(image,output)
+        ssim[l]=image_metric.SSIM(image,output)
+        fsim[l]=image_metric.FSIM(image,output)
+        # ncc[l]=image_metric.NCC(image,output)
+        mse[l]=image_metric.MSE(image,output)
 
         if l % 1 == 0:
             print(
@@ -87,6 +108,14 @@ def SCA(objf, lb, ub, dim, SearchAgents_no, Max_iter):
     s.executionTime = timerEnd - timerStart
     s.convergence = Convergence_curve
     s.optimizer = "SCA"
+    s.bestIndividual = Dest_pos
+    s.psnr=psnr
+    s.ssim=ssim
+    s.fsim=fsim
+    s.ncc=ncc
+    s.mse=mse
+    s.thresholds = e_thresholds
+    
     s.objfname = objf.__name__
 
     return s

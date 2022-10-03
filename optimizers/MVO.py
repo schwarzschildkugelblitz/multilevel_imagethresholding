@@ -7,6 +7,8 @@ import sklearn
 from numpy import asarray
 from sklearn.preprocessing import normalize
 from solution import solution
+import image_metric
+from skimage import data, io, img_as_ubyte
 
 
 def normr(Mat):
@@ -46,8 +48,8 @@ def RouletteWheelSelection(weights):
     return choice
 
 
-def MVO(objf, lb, ub, dim, N, Max_time):
-
+def MVO(objf, lb, ub, dim, N, Max_time,image):
+    histogram = numpy.histogram(image, bins=range(256))[0].astype(numpy.float)
     "parameters"
     # dim=30
     # lb=-100
@@ -70,7 +72,12 @@ def MVO(objf, lb, ub, dim, N, Max_time):
     convergence = numpy.zeros(Max_time)
 
     Best_universe = [0] * dim
-    Best_universe_Inflation_rate = float("inf")
+    Best_universe_Inflation_rate = float("-inf")
+    psnr = numpy.zeros(Max_time)
+    ssim = numpy.zeros(Max_time)
+    fsim = numpy.zeros(Max_time)
+    ncc = numpy.zeros(Max_time)
+    mse = numpy.zeros(Max_time)
 
     s = solution()
 
@@ -93,9 +100,9 @@ def MVO(objf, lb, ub, dim, N, Max_time):
             for j in range(dim):
                 Universes[i, j] = numpy.clip(Universes[i, j], lb[j], ub[j])
 
-            Inflation_rates[i] = objf(Universes[i, :])
+            Inflation_rates[i] = objf(Universes[i, :], histogram)
 
-            if Inflation_rates[i] < Best_universe_Inflation_rate:
+            if Inflation_rates[i] > Best_universe_Inflation_rate:
 
                 Best_universe_Inflation_rate = Inflation_rates[i]
                 Best_universe = numpy.array(Universes[i, :])
@@ -141,6 +148,18 @@ def MVO(objf, lb, ub, dim, N, Max_time):
                         )  # random.uniform(0,1)+lb);
 
         convergence[Time - 1] = Best_universe_Inflation_rate
+        e_thresholds = [0]
+        e_thresholds.extend(Best_universe)
+        e_thresholds.extend([len(histogram) - 1])
+        e_thresholds.sort()
+        regions = numpy.digitize(image, bins=e_thresholds)
+        output = img_as_ubyte(regions)
+        psnr[Time - 1]=image_metric.PSNR(image,output)
+        ssim[Time - 1]=image_metric.SSIM(image,output)
+        fsim[Time - 1]=image_metric.FSIM(image,output)
+        # ncc[Time - 1]=image_metric.NCC(image,output)
+        mse[Time - 1]=image_metric.MSE(image,output)
+
         if Time % 1 == 0:
             print(
                 [
@@ -156,6 +175,13 @@ def MVO(objf, lb, ub, dim, N, Max_time):
     s.endTime = time.strftime("%Y-%m-%d-%H-%M-%S")
     s.executionTime = timerEnd - timerStart
     s.convergence = convergence
+    s.bestIndividual = Best_universe
+    s.psnr=psnr
+    s.ssim=ssim
+    s.fsim=fsim
+    s.ncc=ncc
+    s.mse=mse
+    s.thresholds = e_thresholds
     s.optimizer = "MVO"
     s.objfname = objf.__name__
 

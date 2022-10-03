@@ -34,12 +34,13 @@ import optimizers.AHA as aha
 import optimizers.AHA_L as aha_l
 import thresholding_functions
 from skimage import data, io, img_as_ubyte
-
+import matplotlib.pyplot as plt
 import csv
 import numpy
 import time
 import warnings
 import os
+
 
 warnings.simplefilter(action="ignore")
 
@@ -50,45 +51,45 @@ def selector(algo, func_details, popSize, Iter, dim, image):
     ub = func_details[2]
 
     if algo == "SSA":
-        x = ssa.SSA(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
+        x = ssa.SSA(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter,image)
     elif algo == "PSO":
-        x = pso.PSO(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
+        x = pso.PSO(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter,image)
     elif algo == "GA":
-        x = ga.GA(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
+        x = ga.GA(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter,image)
     elif algo == "BAT":
-        x = bat.BAT(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
+        x = bat.BAT(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter,image)
     elif algo == "FFA":
-        x = ffa.FFA(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
+        x = ffa.FFA(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter,image)
     elif algo == "GWO":
         x = gwo.GWO(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter , image)
-    elif algo == "BBO":
-        x = bbo.BBO(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
+    # elif algo == "BBO":
+    #     x = bbo.BBO(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
     elif algo == "WOA":
-        x = woa.WOA(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
+        x = woa.WOA(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter,image)
     elif algo == "MVO":
-        x = mvo.MVO(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
+        x = mvo.MVO(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter,image)
     # elif algo == "MFO":
     #     x = mfo.MFO(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
     elif algo == "CS":
-        x = cs.CS(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
+        x = cs.CS(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter,image)
     elif algo == "HHO":
-        x = hho.HHO(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
+        x = hho.HHO(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter,image)
     # elif algo == "HHOMP":
     #     x = hhomp.HHOMP(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
     elif algo == "SCA":
-        x = sca.SCA(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
+        x = sca.SCA(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter,image)
     elif algo == "JAYA":
-        x = jaya.JAYA(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
+        x = jaya.JAYA(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter,image)
     elif algo == "DE":
-        x = de.DE(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
+        x = de.DE(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter,image)
     # elif algo == "HHO_copy":
     #     x = hho_copy.HHO(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
     # elif algo == "HHO_copy2":
     #     x = hho_copy2.HHO_copy2(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
     elif algo == "GROM":
-        x = grom.GROM(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
+        x = grom.GROM(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter,image )
     elif algo == "MROM":
-        x = mrom.MROM(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
+        x = mrom.MROM(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter,image )
     # elif algo == "CCO":
     #     x = cco.CCO(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
     # elif algo == "COVIDHHO":
@@ -106,15 +107,15 @@ def selector(algo, func_details, popSize, Iter, dim, image):
     # elif algo == "SEO":
     #     x = seo.SEO(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
     elif algo == "AHA":
-        x = aha.AHA(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
+        x = aha.AHA(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter,image )
     elif algo == "AHA_L":
-        x = aha_l.AHA_L(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter)
+        x = aha_l.AHA_L(getattr(thresholding_functions, function_name), lb, ub, dim, popSize, Iter,image)
     else:
         return NULL
     return x
 
 
-def run(optimizer, objectivefunc, NumOfRuns, params, export_flags ,image):
+def run(optimizer, objectivefunc, NumOfRuns, params, export_flags ,images):
 
     """
     It serves as the main interface of the framework for running the experiments.
@@ -165,59 +166,31 @@ def run(optimizer, objectivefunc, NumOfRuns, params, export_flags ,image):
     for l in range(0, Iterations):
         CnvgHeader.append("Iter" + str(l + 1))
 
-    for l in range(0, Iterations):
-        CnvgHeader.append("Iterpsnr" + str(l + 1))
-
-    for l in range(0, Iterations):
-        CnvgHeader.append("Iterssim" + str(l + 1))
-
-    for l in range(0, Iterations):
-        CnvgHeader.append("Iterfsim" + str(l + 1))
-
-    for l in range(0, Iterations):
-        CnvgHeader.append("Iterncc" + str(l + 1))
+    
+    CnvgHeader.append("Iterpsnr" + str(l + 1))
+    CnvgHeader.append("Iterssim" + str(l + 1))
+    CnvgHeader.append("Iterfsim" + str(l + 1))
+    CnvgHeader.append("Iterncc" + str(l + 1))
 
     for i in range(0, len(optimizer)):
         for j in range(0, len(objectivefunc)):
             convergence = [0] * NumOfRuns
-            psnr = [0] * NumOfRuns
-            ssim = [0] * NumOfRuns
-            fsim = [0] * NumOfRuns
-            ncc = [0] * NumOfRuns
-            mse = [0] * NumOfRuns
             executionTime = [0] * NumOfRuns
-            threshold= [2,3,5,7,8,10,12,13,15,17,18,20]
-            for image in image : 
+            threshold= [15]
+            for images in images :
+                image =cv2.imread("images\{}.jpg".format(images),0)
+                histogram = numpy.histogram(image, bins=range(256))[0].astype(numpy.float)
                 for dim in threshold:
                     for k in range(0, NumOfRuns):
-                        if (k == 0 ):
-                            threshold = x.bestIndividual
-                            ExportToFile = results_directory + "threshold_details.csv"
-                            with open(ExportToFile, "a", newline="\n") as out:
-                                writer = csv.writer(out, delimiter=",")
-                                if (
-                                    Flag_details == False
-                                ):  # just one time to write the header of the CSV file
-                                    header = numpy.concatenate(
-                                        [["Optimizer", "dim","objfname"], ["threshold"]]
-                                    )
-                                    writer.writerow(header)
-                                    Flag_details = True  # at least one experiment
-                                executionTime[k] = x.executionTime
-                                a = numpy.concatenate(
-                                    [[x.optimizer,dim, x.objfname, x], x.convergence, x.psnr, x.ssim, x.fsim, x.ncc]
-                                )
-                                writer.writerow(a)
-                            out.close()
-
+                        
                         func_details = thresholding_functions.getFunctionDetails(objectivefunc[j])
                         x = selector(optimizer[i], func_details, PopulationSize, Iterations ,dim,image)
                         convergence[k] = x.convergence
-                        psnr[k] = x.psnr
-                        ssim[k] = x.ssim
-                        fsim[k] = x.fsim
-                        ncc[k] = x.ncc
-                        mse[k] = x.mse
+                        psnr = x.psnr
+                        ssim = x.ssim
+                        fsim = x.fsim
+                        ncc = x.ncc
+                        mse = x.mse
                         optimizerName = x.optimizer
                         objfname = x.objfname
                         if Export_details == True:
@@ -228,16 +201,67 @@ def run(optimizer, objectivefunc, NumOfRuns, params, export_flags ,image):
                                     Flag_details == False
                                 ):  # just one time to write the header of the CSV file
                                     header = numpy.concatenate(
-                                        [["Optimizer", "dim","objfname", "ExecutionTime"], CnvgHeader]
+                                        [["Optimizer", "dim","images","objfname", "ExecutionTime"], CnvgHeader]
                                     )
                                     writer.writerow(header)
                                     Flag_details = True  # at least one experiment
                                 executionTime[k] = x.executionTime
                                 a = numpy.concatenate(
-                                    [[x.optimizer,dim, x.objfname, x.executionTime], x.convergence, x.psnr, x.ssim, x.fsim, x.ncc]
+                                    [[x.optimizer,dim, x.objfname,images, x.executionTime], x.convergence, [x.psnr, x.ssim, x.fsim, x.ncc ,x.mse]]
                                 )
                                 writer.writerow(a)
                             out.close()
+
+                        if (k == 0 ):
+                            thresholds = x.bestIndividual.astype(int)
+                            thresholds.sort()
+                            print(thresholds)
+                            ExportToFile = results_directory + "threshold_details.csv"
+                            with open(ExportToFile, "a", newline="\n") as out:
+                                writer = csv.writer(out, delimiter=",")
+                                if (
+                                    Flag_details == False
+                                ):  # just one time to write the header of the CSV file
+                                    header = numpy.concatenate(
+                                        [["Optimizer", "dim","images","objfname"], ["thresholds"]]
+                                    )
+                                    writer.writerow(header)
+                                    Flag_details = True  # at least one experiment
+                                executionTime[k] = x.executionTime
+                                a = numpy.concatenate(
+                                    [[x.optimizer,dim,images, x.objfname], thresholds]
+                                )
+                                writer.writerow(a)
+                            out.close()
+                            e_thresholds = [0]
+                            e_thresholds.extend(thresholds)
+                            e_thresholds.extend([len(histogram) - 1])
+                            e_thresholds.sort()
+                            region = numpy.digitize(image, bins=e_thresholds)
+                            regions = region.copy()
+                            for thi in range(len(e_thresholds)-1):
+                                th1 = int( e_thresholds[thi] + 1)
+                                th2 = int( e_thresholds[thi + 1])
+                                regions[region== thi] = int((th1+th2)/2)
+                            print(regions)
+                            output = img_as_ubyte(regions)
+                            # cv2.imshow("hemlo",output)
+                            # cv2.waitKey(0) 
+                            # cv2.imshow("hemloo",image)
+                            # cv2.waitKey(0) 
+                            cv2.imwrite(results_directory+x.optimizer+str(dim)+x.objfname+images+".jpg",output)
+                            # cv2.imsave(results_directory+x.optimizer+str(dim)+x.objfname+images+".jpg",output)
+                            plt.ioff()
+                            fig, ax = plt.subplots()
+                            plt.plot(histogram)
+                            plt.title("Grayscale Histogram")
+                            plt.xlabel("grayscale value")
+                            plt.ylabel("pixels")
+                            fig_name = results_directory+x.optimizer,dim, x.objfname+images+"histgram"
+                            for f in range(len(thresholds)):
+                                plt.axvline(thresholds[f], color='r', linewidth=2)
+                            plt.savefig(fig_name)
+                            plt.clf()
 
                     if Export == True:
                         ExportToFile = results_directory + "experiment.csv"

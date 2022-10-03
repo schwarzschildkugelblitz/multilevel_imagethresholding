@@ -4,9 +4,14 @@ import numpy
 import math
 from solution import solution
 import time
+import image_metric
+from skimage import data, io, img_as_ubyte
 
 
-def HHO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
+
+def HHO(objf, lb, ub, dim, SearchAgents_no, Max_iter, image):
+
+    histogram = numpy.histogram(image, bins=range(256))[0].astype(numpy.float)
 
     # dim=30
     # SearchAgents_no=50
@@ -16,7 +21,7 @@ def HHO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
 
     # initialize the location and Energy of the rabbit
     Rabbit_Location = numpy.zeros(dim)
-    Rabbit_Energy = float("inf")  # change this to -inf for maximization problems
+    Rabbit_Energy = float("-inf")  # change this to -inf for maximization problems
 
     if not isinstance(lb, list):
         lb = [lb for _ in range(dim)]
@@ -31,6 +36,11 @@ def HHO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
 
     # Initialize convergence
     convergence_curve = numpy.zeros(Max_iter)
+    psnr = numpy.zeros(Max_iter)
+    ssim = numpy.zeros(Max_iter)
+    fsim = numpy.zeros(Max_iter)
+    ncc = numpy.zeros(Max_iter)
+    mse = numpy.zeros(Max_iter)
 
     ############################
     s = solution()
@@ -52,10 +62,10 @@ def HHO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
             X[i, :] = numpy.clip(X[i, :], lb, ub)
 
             # fitness of locations
-            fitness = objf(X[i, :])
+            fitness = objf(X[i, :], histogram)
 
             # Update the location of Rabbit
-            if fitness < Rabbit_Energy:  # Change this to > for maximization problem
+            if fitness > Rabbit_Energy:  # Change this to > for maximization problem
                 Rabbit_Energy = fitness
                 Rabbit_Location = X[i, :].copy()
 
@@ -126,7 +136,7 @@ def HHO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
                     )
                     X1 = numpy.clip(X1, lb, ub)
 
-                    if objf(X1) < fitness:  # improved move?
+                    if objf(X1, histogram) > fitness:  # improved move?
                         X[i, :] = X1.copy()
                     else:  # hawks perform levy-based short rapid dives around the rabbit
                         X2 = (
@@ -147,7 +157,7 @@ def HHO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
                     )
                     X1 = numpy.clip(X1, lb, ub)
 
-                    if objf(X1) < fitness:  # improved move?
+                    if objf(X1) > fitness:  # improved move?
                         X[i, :] = X1.copy()
                     else:  # Perform levy-based short rapid dives around the rabbit
                         X2 = (
@@ -157,10 +167,22 @@ def HHO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
                             + numpy.multiply(numpy.random.randn(dim), Levy(dim))
                         )
                         X2 = numpy.clip(X2, lb, ub)
-                        if objf(X2) < fitness:
+                        if objf(X2) > fitness:
                             X[i, :] = X2.copy()
 
         convergence_curve[t] = Rabbit_Energy
+        e_thresholds = [0]
+        e_thresholds.extend(Rabbit_Location)
+        e_thresholds.extend([len(histogram) - 1])
+        e_thresholds.sort()
+        regions = numpy.digitize(image, bins=e_thresholds)
+        output = img_as_ubyte(regions)
+        psnr[t]=image_metric.PSNR(image,output)
+        ssim[t]=image_metric.SSIM(image,output)
+        fsim[t]=image_metric.FSIM(image,output)
+        # ncc[t]=image_metric.NCC(image,output)
+        mse[t]=image_metric.MSE(image,output)
+        
         if t % 1 == 0:
             print(
                 [
@@ -176,6 +198,12 @@ def HHO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
     s.endTime = time.strftime("%Y-%m-%d-%H-%M-%S")
     s.executionTime = timerEnd - timerStart
     s.convergence = convergence_curve
+    s.psnr=psnr
+    s.ssim=ssim
+    s.fsim=fsim
+    s.ncc=ncc
+    s.mse=mse
+    s.thresholds = e_thresholds
     s.optimizer = "HHO"
     s.objfname = objf.__name__
     s.best = Rabbit_Energy
