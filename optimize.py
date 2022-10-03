@@ -208,7 +208,7 @@ def run(optimizer, objectivefunc, NumOfRuns, params, export_flags ,images):
                                     Flag_details = True  # at least one experiment
                                 executionTime[k] = x.executionTime
                                 a = numpy.concatenate(
-                                    [[x.optimizer,dim, x.objfname,images, x.executionTime], x.convergence, [x.psnr, x.ssim, x.fsim, x.ncc ,x.mse]]
+                                    [[x.optimizer,dim, x.objfname,images, x.executionTime], x.convergence, x.psnr, x.ssim, x.fsim, x.ncc ,x.mse]
                                 )
                                 writer.writerow(a)
                             out.close()
@@ -264,44 +264,44 @@ def run(optimizer, objectivefunc, NumOfRuns, params, export_flags ,images):
                             # plt.savefig(fig_name)
                             # plt.clf()
 
-                    if Export == True:
-                        ExportToFile = results_directory + "experiment.csv"
+                    # if Export == True:
+                    #     ExportToFile = results_directory + "experiment.csv"
 
-                        with open(ExportToFile, "a", newline="\n") as out:
-                            writer = csv.writer(out, delimiter=",")
-                            if (
-                                Flag == False
-                            ):  # just one time to write the header of the CSV file
-                                header = numpy.concatenate(
-                                    [["Optimizer", "dim", "objfname", "ExecutionTime"], CnvgHeader]
-                                )
-                                writer.writerow(header)
-                                Flag = True
+                    #     with open(ExportToFile, "a", newline="\n") as out:
+                    #         writer = csv.writer(out, delimiter=",")
+                    #         if (
+                    #             Flag == False
+                    #         ):  # just one time to write the header of the CSV file
+                    #             header = numpy.concatenate(
+                    #                 [["Optimizer", "dim", "objfname", "ExecutionTime"], CnvgHeader]
+                    #             )
+                    #             writer.writerow(header)
+                    #             Flag = True
 
-                            avgExecutionTime = float("%0.2f" % (sum(executionTime) / NumOfRuns))
-                            avgConvergence = numpy.around(
-                                numpy.mean(convergence, axis=0, dtype=numpy.float64), decimals=2
-                            ).tolist()
-                            avgpsnr = numpy.around(
-                                numpy.mean(psnr, axis=0, dtype=numpy.float64), decimals=2
-                            ).tolist()
-                            avgssim = numpy.around(
-                                numpy.mean(ssim, axis=0, dtype=numpy.float64), decimals=2
-                            ).tolist()
-                            avgfsim = numpy.around(
-                                numpy.mean(convergence, axis=0, dtype=numpy.float64), decimals=2
-                            ).tolist()
-                            avgncc = numpy.around(
-                                numpy.mean(convergence, axis=0, dtype=numpy.float64), decimals=2
-                            ).tolist()
-                            avgmse = numpy.around(
-                                numpy.mean(convergence, axis=0, dtype=numpy.float64), decimals=2
-                            ).tolist()
-                            a = numpy.concatenate(
-                                [[optimizerName,dim, objfname, avgExecutionTime], avgConvergence,avgpsnr, avgssim, avgpsnr, avgssim, avgfsim ,avgncc,avgmse]
-                            )
-                            writer.writerow(a)
-                        out.close()
+                    #         avgExecutionTime = float("%0.2f" % (sum(executionTime) / NumOfRuns))
+                    #         avgConvergence = numpy.around(
+                    #             numpy.mean(convergence, axis=0, dtype=numpy.float64), decimals=2
+                    #         ).tolist()
+                    #         avgpsnr = numpy.around(
+                    #             numpy.mean(psnr, axis=0, dtype=numpy.float64), decimals=2
+                    #         ).tolist()
+                    #         avgssim = numpy.around(
+                    #             numpy.mean(ssim, axis=0, dtype=numpy.float64), decimals=2
+                    #         ).tolist()
+                    #         avgfsim = numpy.around(
+                    #             numpy.mean(convergence, axis=0, dtype=numpy.float64), decimals=2
+                    #         ).tolist()
+                    #         avgncc = numpy.around(
+                    #             numpy.mean(convergence, axis=0, dtype=numpy.float64), decimals=2
+                    #         ).tolist()
+                    #         avgmse = numpy.around(
+                    #             numpy.mean(convergence, axis=0, dtype=numpy.float64), decimals=2
+                    #         ).tolist()
+                    #         a = numpy.concatenate(
+                    #             [[optimizerName,dim, objfname, avgExecutionTime], avgConvergence,avgpsnr, avgssim, avgpsnr, avgssim, avgfsim ,avgncc,avgmse]
+                    #         )
+                    #         writer.writerow(a)
+                    #     out.close()
 
     # if Export_convergence == True:
     #     print(optimizer)

@@ -124,8 +124,13 @@ def SSA(objf, lb, ub, dim, N, Max_iteration,image):
         e_thresholds.extend(FoodPosition)
         e_thresholds.extend([len(histogram) - 1])
         e_thresholds.sort()
-        regions = numpy.digitize(image, bins=e_thresholds)
-        
+        region = numpy.digitize(image, bins=e_thresholds)
+        regions = region.copy()
+        for thi in range(len(e_thresholds)-1):
+            th1 = int( e_thresholds[thi] + 1)
+            th2 = int( e_thresholds[thi + 1])
+            regions[region== thi] = int((th1+th2)/2)
+        output = img_as_ubyte(regions)
         output = img_as_ubyte(regions)
         psnr[l]=image_metric.PSNR(image,output)
         ssim[l]=image_metric.SSIM(image,output)

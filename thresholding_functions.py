@@ -1,5 +1,6 @@
 import numpy
 import math
+from scipy.stats import entropy
 
 def kapur(search_agents,histogram):
 
@@ -39,11 +40,11 @@ def otsu(search_agent,histogram):
 
     e_thresholds = [0]
     e_thresholds.extend(search_agent)
-    e_thresholds.extend([len(hist) - 1])
+    e_thresholds.extend([len(histogram) - 1])
     variance =0 
     for i in range(len(e_thresholds) - 1):
-        t1 = e_thresholds[i] + 1
-        t2 = e_thresholds[i + 1]
+        t1 = int(e_thresholds[i] + 1)
+        t2 = int(e_thresholds[i + 1])
 
         # Cumulative histogram
         weight = c_hist[t2] - c_hist[t1 - 1]
@@ -54,14 +55,43 @@ def otsu(search_agent,histogram):
         # Region mean
         r_mean = r_cdf / weight if weight != 0 else 0
 
-        variance += weight * r_mean ** 2
+        variance += math.sqrt(weight * r_mean ** 2)
 
     return variance
+
+# def shannon(search_agent,histogram) :
+#     c_hist = numpy.cumsum(histogram)
+#     cdf = numpy.cumsum(numpy.arange(len(histogram)) * histogram)
+
+
+#     e_thresholds = [0]
+#     e_thresholds.extend(search_agent)
+#     e_thresholds.extend([len(histogram) - 1])
+#     entropy_ =0 
+#     for i in range(len(e_thresholds) - 1):
+#         t1 = int(e_thresholds[i] + 1)
+#         t2 = int(e_thresholds[i + 1])
+
+#         # Cumulative histogram
+#         weight = c_hist[t2] - c_hist[t1 - 1]
+
+#         # Region CDF
+#         r_cdf = cdf[t2] - cdf[t1 - 1]
+
+#         # Region mean
+        
+
+#         entropy_ += entropy(r_cdf)
+
+#     return entropy_
+
+
 
 def getFunctionDetails(a):
     # [name, lb, ub, dim]
     param = {
         "kapur": ["kapur", 0, 254,2],
-        "otsu": ["otsu", 0, 255,2],
+        "otsu": ["otsu", 0, 254,2],
+        "shannon" : ["shannon",0,254,2],
     }
     return param.get(a, "nothing")
