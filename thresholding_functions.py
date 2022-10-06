@@ -36,28 +36,28 @@ def otsu(search_agent,histogram):
     # Cumulative histograms
     c_hist = numpy.cumsum(histogram)
     cdf = numpy.cumsum(numpy.arange(len(histogram)) * histogram)
-
+    total = numpy.sum(histogram)
+    total_c = cdf[-1]
 
     e_thresholds = [0]
     e_thresholds.extend(search_agent)
     e_thresholds.extend([len(histogram) - 1])
-    variance =0 
+    variance = 0 
     for i in range(len(e_thresholds) - 1):
         t1 = int(e_thresholds[i] + 1)
         t2 = int(e_thresholds[i + 1])
 
         # Cumulative histogram
-        weight = c_hist[t2] - c_hist[t1 - 1]
-
+        weight = (c_hist[t2] - c_hist[t1 - 1])
         # Region CDF
         r_cdf = cdf[t2] - cdf[t1 - 1]
 
         # Region mean
         r_mean = r_cdf / weight if weight != 0 else 0
 
-        variance += math.sqrt(weight * r_mean ** 2)
+        variance += weight * r_mean ** 2
 
-    return variance
+    return (variance/total)-10000
 
 # def shannon(search_agent,histogram) :
 #     c_hist = numpy.cumsum(histogram)

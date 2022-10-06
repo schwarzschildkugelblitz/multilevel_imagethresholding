@@ -208,7 +208,7 @@ def run(optimizer, objectivefunc, NumOfRuns, params, export_flags ,images):
                                     Flag_details = True  # at least one experiment
                                 executionTime[k] = x.executionTime
                                 a = numpy.concatenate(
-                                    [[x.optimizer,dim, x.objfname,images, x.executionTime], x.convergence, x.psnr, x.ssim, x.fsim, x.ncc ,x.mse]
+                                    [[x.optimizer,dim, x.objfname,image, x.executionTime], x.convergence, x.psnr, x.ssim, x.fsim, x.ncc ,x.mse]
                                 )
                                 writer.writerow(a)
                             out.close()
@@ -230,7 +230,7 @@ def run(optimizer, objectivefunc, NumOfRuns, params, export_flags ,images):
                                     Flag_details = True  # at least one experiment
                                 executionTime[k] = x.executionTime
                                 a = numpy.concatenate(
-                                    [[x.optimizer,dim,images, x.objfname], thresholds]
+                                    [[x.optimizer,dim,image, x.objfname], thresholds]
                                 )
                                 writer.writerow(a)
                             out.close()
